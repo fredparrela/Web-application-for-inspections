@@ -1,0 +1,137 @@
+ /* Inline CSS for simplicity; move to style.css for better practice */
+ body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.form-container {
+    width: 400px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: blue;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin: 10px 0 5px;
+    
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 100px;
+}
+
+button {
+    display: block;
+    margin: auto;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.radio-group {
+    display: flex; /* Make items align horizontally */
+    gap: 20px; /* Space between Yes and No radio buttons */
+    align-items: center; /* Align text and buttons vertically */
+    color: rgb(8, 8, 8);
+}
+
+.radio-group label {
+    display: flex; /* Align radio button and text inline */
+    align-items: center; /* Vertically center the button and text */
+    gap: 5px; /* Space between radio button and label text */
+    font-size: 14px; /* Adjust font size */
+    cursor: pointer; /* Make label clickable */
+}
+
+input[type="radio"] {
+    width: 14px; /* Smaller size for radio buttons */
+    height: 14px;
+    margin: 0; /* Remove default margins */
+    cursor: pointer; /* Pointer on hover */
+}
+
+/* Popup-Specific Styles */
+.popup-body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.popup-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.popup-table th,
+.popup-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+
+video, img {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+video, img {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+#video, #capturedImage {
+    display: none;
+    width: 100%;
+    max-width: 400px;
+}
+
+#canvas {
+    display: none; /* Moved from inline style */
+}

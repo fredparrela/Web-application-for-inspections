@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NR 10 Inspection Form</title>
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+    <div class="form-container">
+        <h1>NR 10 Inspection Form</h1>
+        <form id="inspection-form">
+            <!-- Type of Equipment -->
+            <label for="type-equipment">Type of equipment</label>
+            <select id="type-equipment" name="type-equipment">
+                <option value="">--Select Type--</option>
+                <option value="Junction Box">Junction Box</option>
+                <option value="Panel">Panel</option>
+                <option value="Motor">Motor</option>
+                <option value="Power Outlet">Power Outlet</option>
+                <option value="Command Switch">Command Switch</option>
+                <option value="Environment Conditions">Environment Conditions</option>
+                <option value="Others">Others</option>
+            </select>
+
+        <!-- Location Section -->
+        <label for="location">Select Location</label>
+        <select id="location" name="location">
+            <option value="">--Select Location--</option>
+        </select>
+        <button type="button" id="add-location">Add Location</button>
+
+
+        
+            <!-- Description -->
+            <label for="tag-id">Equipment Description</label>
+            <input type="text" id="Equipment-des" name="Equipment-des" placeholder="Enter Equipment Description">
+
+            <!-- TAG / ID Number -->
+            <label for="tag-id">Equipment TAG / ID Number</label>
+            <input type="text" id="tag-id" name="tag-id" placeholder="Enter TAG / ID Number">
+
+            <!-- Compliance / General PIC -->
+            <fieldset class="radio-container">
+
+                <div class="radio-group">
+                    <legend>General Picture</legend>
+                    <label for="general-yes">
+                        <input type="radio" id="general-yes" name="general" value="Yes"> Yes
+                    </label>
+                    <label for="general-no">
+                        <input type="radio" id="general-no" name="general" value="No"> No
+                    </label>
+                </div>
+                
+                <div class="radio-group">
+                    <legend>Compliance</legend>
+                    <label for="compliance-yes">
+                        <input type="radio" id="compliance-yes" name="compliance" value="Yes"> Yes
+                    </label>
+                    <label for="compliance-no">
+                        <input type="radio" id="compliance-no" name="compliance" value="No"> No
+                    </label>
+                </div>
+            
+
+            </fieldset>
+            
+
+
+
+            <!-- Finding -->
+            <label for="finding">Finding</label>
+            <select id="finding" name="finding" multiple size="5">
+                <!-- Findings will be dynamically added here -->
+            </select>
+            <!-- Upload Equipment -->
+            <h2>Upload Equipment Images</h2>
+
+        
+            <input type="file" id="uploadBtn" multiple><br><br>
+
+            <!-- Video
+            <video id="cameraStream" autoplay></video>
+            <img id="capturedImage" alt="Captured Image">            
+            <canvas id="canvas"></canvas>
+            
+            <button type="button" id="startCameraBtn">startCameraBtn</button>
+            <button type="button" id="captureImageBtn" disabled>Capture Image</button>
+            <button type="button" id="stopCameraBtn">Stop Camera</button> 
+             -->
+            <!-- Remarks -->
+            <label for="remarks">Remarks</label>
+            <input type="text" id="remarks" name="remarks" placeholder="Additional remarks">
+
+            <!-- Buttons -->
+            <button type="button" id="save-data">Save Data</button>
+            <button type="button" id="view-table">View Table</button>
+            <button type="button"  id="clear-all-data">Clear All Data</button>
+
+
+
+
+
+        </form>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

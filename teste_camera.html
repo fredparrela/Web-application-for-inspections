@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        video, img {
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay playsinline style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <div>
+        <button id="startCameraBtn">Take Pic</button>
+        <button id="captureImageBtn" disabled>Capture Image</button>
+    </div>
+    <img id="capturedImage" alt="Captured Image">
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const capturedImage = document.getElementById("capturedImage");
+        const startCameraBtn = document.getElementById("startCameraBtn");
+        const captureImageBtn = document.getElementById("captureImageBtn");
+        let cameraStream = null;
+
+        startCameraBtn.addEventListener('click', () => {
+            if (!cameraStream) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        cameraStream = stream;
+                        video.srcObject = stream;
+                        video.style.display = 'block';
+                        //startCameraBtn.style.display = 'none';
+                        captureImageBtn.disabled = false;
+                        console.log("Camera started successfully.");
+                    })
+                    .catch(error => {
+                        console.error("Error accessing camera:", error);
+                        alert("Camera access denied or not available.");
+                    });
+            } else {
+                video.style.display = 'block';
+                startCameraBtn.style.display = 'none';
+            }
+        });
+
+            // Stop Camera
+        stopCameraBtn.addEventListener('click', () => {
+            if (cameraStream) {
+                let tracks = cameraStream.getTracks();
+                tracks.forEach(track => track.stop()); // Stop all video tracks
+                video.srcObject = null;
+                cameraStream = null;
+                video.style.display = 'none';
+                //startCameraBtn.style.display = 'inline-block';
+                //stopCameraBtn.style.display = 'none'; // Hide Stop Button
+                //captureImageBtn.disabled = true;
+                console.log("Camera stopped successfully.");
+            }
+        });        
+
+        captureImageBtn.addEventListener("click", () => {
+            if (!cameraStream) {
+                alert("Camera is not started yet!");
+                return;
+            }
+            const context = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            const imageData = canvas.toDataURL("image/png");
+            capturedImage.src = imageData;
+            localStorage.setItem("capturedImage", imageData);
+            console.log("Image captured successfully.");
+        });
+    </script>
+</body>
+</html>
