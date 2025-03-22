@@ -8,8 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearAllDataButton = document.getElementById("clear-all-data");
     const locations = []; // Array to store unique locations
     let formData = []; // Array to store form data
+    let isEx = false; // Global variable to track if the location is Ex
+    const confirmFindingsBtn = document.getElementById("confirmFindingsBtn");
+    const uploadContainer = document.getElementById("uploadContainer");
 
-    
     // Call these functions on page load
     loadLocations();
     loadFormDataFromLocalStorage();
@@ -26,23 +28,67 @@ document.addEventListener("DOMContentLoaded", () => {
         "Environment Conditions": ["Isolation Mats","House Keeping","Electrical Room used for Storage", "Doors Entry Sign", "Cable Trays Covered", "Hazardous Area Signal"],
         "Others": [...baseFindings, "ON/OFF Stickers", "Live Parts Protected", "Indication Light Colour", "Direction of Rotation Arrow"]
     };
-
-    // Function to update the dropdown with current locations
+    // update location dropdown 
     function updateLocationDropdown() {
-        const lastSelectedLocation = localStorage.getItem("lastSelectedLocation");
-        //locationSelect.innerHTML = `<option value="">${lastSelectedLocation || '--Select Location--'}</option>`;
-
+        const lastLocationRaw = localStorage.getItem("locations");
+        const locations = lastLocationRaw ? JSON.parse(lastLocationRaw) : [];
+    
+        locationSelect.innerHTML = `<option value="">--Select Location--</option>`;
+    
+        // Get the last selected location name (optional)
+        const lastSelectedLocationName = locations.length > 0 ? locations[locations.length - 1].name : "";
+    
+        // Fill the dropdown
         locations.forEach(location => {
             const option = document.createElement("option");
-            option.value = location;
-            option.textContent = location;
-            if (location === lastSelectedLocation) {
+            option.value = location.name;
+            option.textContent = location.name + (location.isEx ? " (Ex)" : "");
+            if (location.name === lastSelectedLocationName) {
                 option.selected = true;
             }
             locationSelect.appendChild(option);
         });
-        
+    
+        // Find the selected location object
+        const selectedLocationObj = locations.find(loc => loc.name === lastSelectedLocationName);
+        const isEx = selectedLocationObj ? selectedLocationObj.isEx : false;
+    
+       // console.log("Last selected location name:", lastSelectedLocationName);
+       // console.log("isEx:", isEx);
+    
+        // Set and lock the radio buttons
+        const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
+        const noRadio = document.querySelector('input[name="exArea"][value="no"]');
+        if (yesRadio && noRadio) {
+            yesRadio.checked = isEx;
+            noRadio.checked = !isEx;
+            yesRadio.disabled = true;
+            noRadio.disabled = true;
+        }
     }
+    // Location select 
+    locationSelect.addEventListener("change", () => {
+        const selectedName = locationSelect.value;
+    
+        const lastLocationRaw = localStorage.getItem("locations");
+        const locations = lastLocationRaw ? JSON.parse(lastLocationRaw) : [];
+    
+        const selectedLocationObj = locations.find(loc => loc.name === selectedName);
+        const isEx = selectedLocationObj ? selectedLocationObj.isEx : false;
+    
+        const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
+        const noRadio = document.querySelector('input[name="exArea"][value="no"]');
+    
+        if (yesRadio && noRadio) {
+            yesRadio.checked = isEx;
+            noRadio.checked = !isEx;
+            yesRadio.disabled = true;
+            noRadio.disabled = true;
+        }
+    
+        //console.log(`Selected location: ${selectedName} | Ex Area: ${isEx}`);
+    });
+    
 
     // Save the selected location to localStorage
     locationSelect.addEventListener("change", () => {
@@ -55,15 +101,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add a new location
     addLocationButton.addEventListener("click", () => {
         const newLocation = prompt("Please enter a new location:");
-        if (newLocation && !locations.includes(newLocation.trim())) {
-            locations.push(newLocation.trim());
-            saveLocations();
-            updateLocationDropdown();
-            alert(`Location "${newLocation.trim()}" added successfully.`);
-        } else {
-            alert("This location already exists or is invalid.");
+        const trimmedLocation = newLocation ? newLocation.trim() : "";
+    
+        if (!trimmedLocation) {
+            alert("Invalid location name.");
+            return;
         }
+    
+        // Check if location already exists
+        const alreadyExists = locations.some(loc => loc.name === trimmedLocation);
+        if (alreadyExists) {
+            alert("This location already exists.");
+            return;
+        }
+    
+        const confirmEx = confirm(`Is "${trimmedLocation}" an Ex location? (Select Cancel for no)`);
+        const newLocObj = { name: trimmedLocation, isEx: confirmEx };
+    
+        locations.push(newLocObj);
+        saveLocations();
+        updateLocationDropdown();
+        alert(`Location "${trimmedLocation}" added successfully.${confirmEx ? ' Marked as Ex.' : ''}`);
     });
+    
+    
 
     // Save locations to localStorage
     function saveLocations() {
@@ -105,12 +166,124 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    
+    confirmFindingsBtn.addEventListener("click", () => {
+        findingSelect.disabled = true;
+        confirmFindingsBtn.disabled = true;
+        uploadContainer.innerHTML = "";
+    
+        const selectedFindings = Array.from(findingSelect.selectedOptions).map(option => option.value);
+    
+        selectedFindings.forEach((finding, index) => {
+            const label = document.createElement("label");
+            label.textContent = `Upload image for: ${finding}`;
+            label.setAttribute("for", `upload-${index}`);
+    
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.id = `upload-${index}`;
+            input.name = `upload-${index}`;
+            input.dataset.finding = finding; // 👈 save finding as a custom attribute
+    
+            input.addEventListener("change", async () => {
+                const file = input.files[0];
+                const findingPart = input.dataset.finding.replace(/\s+/g, "_");
+    
+                const typeEquipment = document.getElementById("type-equipment").value.trim();
+                const location = locationSelect.value.trim();
+                const tagId = document.getElementById("tag-id").value.trim();
+    
+                if (!typeEquipment || !location || !tagId) {
+                    alert("Please fill in all fields before uploading images.");
+                    return;
+                }
+    
+                if (!file) {
+                    alert(`Please upload an image for: ${findingPart}`);
+                    return;
+                }
+    
+                const newFileName = `${findingPart}_${tagId}_${typeEquipment}_${location}.png`;
+                const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = newFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            });
+    
+            const div = document.createElement("div");
+            div.style.marginTop = "10px";
+            div.appendChild(label);
+            div.appendChild(document.createElement("br"));
+            div.appendChild(input);
+    
+            uploadContainer.appendChild(div);
+            
+        });
+    });
+    
     // Event listeners for dropdown updates
     typeEquipment.addEventListener("change", updateFindingsDropdown);
     document.querySelectorAll('input[name="compliance"]').forEach(radio => {
         radio.addEventListener("change", updateFindingsDropdown);
     });
 
+
+
+   // Save form data
+
+   saveButton.addEventListener("click", () => {
+    const selectedType = typeEquipment.value;
+    const locationName = locationSelect.value.trim();
+    const tagId = document.getElementById("tag-id").value.trim();
+    const remarks = document.getElementById("remarks").value.trim();
+    const complianceElement = document.querySelector('input[name="compliance"]:checked');
+    const compliance = complianceElement ? complianceElement.value : null;
+    const selectedFindings = Array.from(findingSelect.selectedOptions).map(option => option.value);
+
+    const resistanceReading = document.getElementById("res_operator").value; // "<1" or ">1"
+    const currentReading = document.getElementById("cur_operator").value;     // "<15" or ">15"
+
+    // ✅ Get Ex value from radio button
+    const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
+    const isEx = yesRadio ? yesRadio.checked : false;
+
+    if (!tagId || !locationName || !selectedType || !compliance) {
+        let errorMessage = "Please fix the following issues:";
+        if (!tagId) errorMessage += "\n- TAG/ID Number is required.";
+        if (!locationName) errorMessage += "\n- Location is required.";
+        if (!selectedType) errorMessage += "\n- Type of equipment is required.";
+        if (!compliance) errorMessage += "\n- Select Yes or No for Compliance.";
+        alert(errorMessage);
+    } else {
+        formData.push({
+            typeEquipment: selectedType,
+            location: locationName,
+            isExArea: isEx,
+            tagId,
+            remarks,
+            compliance,
+            findings: selectedFindings,
+            resistance: resistanceReading,
+            current: currentReading
+        });
+
+        saveFormDataToLocalStorage();
+
+        // Clear fields
+        findingSelect.innerHTML = "";
+        document.getElementById("tag-id").value = "";
+        document.getElementById("type-equipment").value = "";
+
+        alert("Data saved");
+    }
+});
+
+    /*
     // Save form data
     saveButton.addEventListener("click", () => {
         const selectedType = typeEquipment.value;
@@ -120,6 +293,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const complianceElement = document.querySelector('input[name="compliance"]:checked');
         const compliance = complianceElement ? complianceElement.value : null;
         const selectedFindings = Array.from(findingSelect.selectedOptions).map(option => option.value);
+        
+
 
         if (!tagId || !location || !selectedType || !compliance) {
             let errorMessage = "Please fix the following issues:";
@@ -137,15 +312,17 @@ document.addEventListener("DOMContentLoaded", () => {
             findingSelect.innerHTML = "";
             document.getElementById("tag-id").value = "";
             document.getElementById("type-equipment").value = "";
+            alert("Data saved");
             
         }
     });
-
+   */
     // Save formData to localStorage
     function saveFormDataToLocalStorage() {
         localStorage.setItem("formData", JSON.stringify(formData));
+        //loadIdMapsFromLocalStorage();
     }
-
+    /*
     // View table data in a popup
     viewTableButton.addEventListener("click", () => {
         if (formData.length === 0) {
@@ -188,7 +365,69 @@ document.addEventListener("DOMContentLoaded", () => {
             popupWindow.document.getElementById("table-container").innerHTML = tableHtml;
         };
     });
+    */
 
+
+    viewTableButton.addEventListener("click", () => {
+        if (formData.length === 0) {
+            alert("No data to display!");
+            return;
+        }
+    
+        // Dynamically build table based on unique findings
+        const allFindings = Array.from(new Set(formData.flatMap(row => row.findings)));
+    
+        let tableHtml = `
+            <table id="data-table" border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+                <thead>
+                    <tr>
+                        <th>Type of Equipment</th>
+                        <th>Location</th>
+                        <th>Ex Area</th>
+                        <th>TAG/ID</th>
+                        <th>Compliance</th>
+                        ${allFindings.map(finding => `<th>${finding}</th>`).join("")}
+                        <th>Resistance</th>
+                        <th>Current</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+    
+        formData.forEach(row => {
+            tableHtml += `
+                <tr>
+                    <td>${row.typeEquipment}</td>
+                    <td>${row.location}</td>
+                    <td>${row.isExArea ? "Yes" : "No"}</td>
+                    <td>${row.tagId}</td>
+                    <td>${row.compliance}</td>
+                    ${allFindings.map(finding => row.findings.includes(finding) ? `<td>Yes</td>` : `<td></td>`).join("")}
+                    <td>${row.resistance || ""}</td>
+                    <td>${row.current || ""}</td>
+                    <td>${row.remarks}</td>
+                </tr>
+            `;
+        });
+    
+        tableHtml += `</tbody></table>`;
+    
+        // Open the popup and inject the table
+        const popupWindow = window.open("popup.html", "Saved Data", "width=1000,height=600");
+    
+        // Wait until popup is fully loaded before inserting HTML
+        popupWindow.onload = () => {
+            const container = popupWindow.document.getElementById("table-container");
+            if (container) {
+                container.innerHTML = tableHtml;
+            } else {
+                console.error("No container with id 'table-container' found in popup.html.");
+            }
+        };
+    });
+    
+    
     // Clear all data from localStorage
     clearAllDataButton.addEventListener("click", () => {
         if (confirm("Are you sure you want to clear all saved data?")) {
@@ -250,27 +489,18 @@ document.addEventListener("DOMContentLoaded", () => {
             //let findingsPart = selectedFindings.length > 0 ? selectedFindings.join("_") : "NoFindings";
             let findingsPart = selectedFindings.join("_") ;
             // Check if the "Yes" option for General Picture is selected
-            const generalPic = document.querySelector('input[name="general"]:checked')?.value === "Yes";    
-            
-
-            if (generalPic) {
-                findingsPart += "_General_Pic";
-            }
+            //const generalPic = document.querySelector('input[name="general"]:checked')?.value === "Yes";    
             
             
-            /* Print the result to the console
-            console.log("Selected Findings:", selectedFindings);
-            console.log("findingsPart:", findingsPart);
-            */
 
             if (!typeEquipment || !location || !tagId) {
                 alert("Please fill in all fields before uploading images.");
                 return;
             }
-        
+            const newFileName = `${findingsPart}_${tagId}_${typeEquipment}_${location}.png`;
             for (const file of files) {
     
-                const newFileName = `${findingsPart}_${tagId}_${typeEquipment}_${location}.png`;
+                //const newFileName = `${findingsPart}_${tagId}_${typeEquipment}_${location}.png`;
 
                // const newFileName = `${allFindings.filter(finding => row.findings.includes(finding)).join("_")}_${tagId}_${typeEquipment}_${location}.png`;
         
@@ -291,7 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         
         
-            alert("Images saved successfully! Check your downloads folder.");
+            //alert("Images saved successfully! Check your downloads folder.");
             document.getElementById("uploadBtn").value = ""; // Clears file selection
         });
         

@@ -24,14 +24,24 @@
                 <option value="Others">Others</option>
             </select>
 
+        
         <!-- Location Section -->
         <label for="location">Select Location</label>
         <select id="location" name="location">
             <option value="">--Select Location--</option>
         </select>
+        
+        <fieldset id="ex-area-fieldset">
+            <legend>Ex Area</legend>
+            <label for="Ex-yes">
+                <input type="radio" id="Ex-yes" name="exArea" value="yes"> Yes
+            </label>
+            <label for="Ex-no">
+                <input type="radio" id="Ex-no" name="exArea" value="no"> No
+            </label>
+        </fieldset>
+        
         <button type="button" id="add-location">Add Location</button>
-
-
         
             <!-- Description -->
             <label for="tag-id">Equipment Description</label>
@@ -41,18 +51,9 @@
             <label for="tag-id">Equipment TAG / ID Number</label>
             <input type="text" id="tag-id" name="tag-id" placeholder="Enter TAG / ID Number">
 
-            <!-- Compliance / General PIC -->
-            <fieldset class="radio-container">
+            <!-- Compliance -->
+            
 
-                <div class="radio-group">
-                    <legend>General Picture</legend>
-                    <label for="general-yes">
-                        <input type="radio" id="general-yes" name="general" value="Yes"> Yes
-                    </label>
-                    <label for="general-no">
-                        <input type="radio" id="general-no" name="general" value="No"> No
-                    </label>
-                </div>
                 
                 <div class="radio-group">
                     <legend>Compliance</legend>
@@ -65,9 +66,9 @@
                 </div>
             
 
-            </fieldset>
-            
-
+            <!-- Upload General PIC -->
+            <h2>Upload General PIC</h2>
+            <input type="file" id="uploadBtn" multiple><br><br>
 
 
             <!-- Finding -->
@@ -75,21 +76,42 @@
             <select id="finding" name="finding" multiple size="5">
                 <!-- Findings will be dynamically added here -->
             </select>
-            <!-- Upload Equipment -->
-            <h2>Upload Equipment Images</h2>
 
-        
-            <input type="file" id="uploadBtn" multiple><br><br>
+            <button id="confirmFindingsBtn">OK</button>
+            <div id="uploadContainer"></div>
 
-            <!-- Video
-            <video id="cameraStream" autoplay></video>
-            <img id="capturedImage" alt="Captured Image">            
-            <canvas id="canvas"></canvas>
             
-            <button type="button" id="startCameraBtn">startCameraBtn</button>
-            <button type="button" id="captureImageBtn" disabled>Capture Image</button>
-            <button type="button" id="stopCameraBtn">Stop Camera</button> 
-             -->
+        
+             <fieldset class="radio-container">
+                <!--<legend>Test Readings</legend>  -->
+                <div style="display: flex; gap: 20px;">
+                    
+                    <!-- Resistance -->
+                    <div>
+                        <label for="res_operator">Resistance Reading</label><br>
+                        <select id="res_operator" name="res_operator">
+                            <option value="<1 &Omega;">&lt; 1 &Omega;</option>
+                            <option value=">1 &Omega;">&gt; 1 &Omega;</option>
+                            <option value="N/A">N/A</option>
+
+                        </select>
+                    </div>
+            
+                    <!-- Current -->
+                    <div>
+                        <label for="cur_operator">Current Reading</label><br>
+                        <select id="cur_operator" name="cur_operator">
+                            <option value="<15mA">&lt; 15 mA</option>
+                            <option value=">15mA">&gt; 15 mA</option>
+                            <option value="N/A">N/A</option>
+                        </select>
+                    </div>
+                    
+                </div>
+            </fieldset>
+            
+                
+            </fieldset>
             <!-- Remarks -->
             <label for="remarks">Remarks</label>
             <input type="text" id="remarks" name="remarks" placeholder="Additional remarks">
