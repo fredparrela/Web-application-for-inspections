@@ -370,64 +370,18 @@ document.addEventListener("DOMContentLoaded", () => {
     */
 
 
-    viewTableButton.addEventListener("click", () => {
-        if (formData.length === 0) {
-            alert("No data to display!");
-            return;
+    window.onload = () => {
+        const viewTableButton = document.getElementById("viewTableButton");
+
+        if (viewTableButton) {
+            viewTableButton.addEventListener("click", () => {
+                window.open("popup.html", "Saved Data", "width=1000,height=600");
+            });
+        } else {
+            console.error("Botão 'viewTableButton' não encontrado no DOM.");
         }
-    
-        // Dynamically build table based on unique findings
-        const allFindings = Array.from(new Set(formData.flatMap(row => row.findings)));
-    
-        let tableHtml = `
-            <table id="data-table" border="1" style="width:100%; border-collapse:collapse; text-align:center;">
-                <thead>
-                    <tr>
-                        <th>Type of Equipment</th>
-                        <th>Location</th>
-                        <th>Ex Area</th>
-                        <th>TAG/ID</th>
-                        <th>Compliance</th>
-                        ${allFindings.map(finding => `<th>${finding}</th>`).join("")}
-                        <th>Resistance</th>
-                        <th>Current</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-    
-        formData.forEach(row => {
-            tableHtml += `
-                <tr>
-                    <td>${row.typeEquipment}</td>
-                    <td>${row.location}</td>
-                    <td>${row.isExArea ? "Yes" : "No"}</td>
-                    <td>${row.tagId}</td>
-                    <td>${row.compliance}</td>
-                    ${allFindings.map(finding => row.findings.includes(finding) ? `<td>Yes</td>` : `<td></td>`).join("")}
-                    <td>${row.resistance || ""}</td>
-                    <td>${row.current || ""}</td>
-                    <td>${row.remarks}</td>
-                </tr>
-            `;
-        });
-    
-        tableHtml += `</tbody></table>`;
-    
-        // Open the popup and inject the table
-        const popupWindow = window.open("popup.html", "Saved Data", "width=1000,height=600");
-    
-        // Wait until popup is fully loaded before inserting HTML
-        popupWindow.onload = () => {
-            const container = popupWindow.document.getElementById("table-container");
-            if (container) {
-                container.innerHTML = tableHtml;
-            } else {
-                console.error("No container with id 'table-container' found in popup.html.");
-            }
-        };
-    });
+    };
+
     
     
     // Clear all data from localStorage

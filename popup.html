@@ -2,16 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspection Data</title>
-    <link rel="stylesheet" href="css/style.css"> <!-- Link external CSS -->
+    <title>Inspection Table</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 6px;
+        }
+    </style>
 </head>
 <body>
     <h2 style="text-align:center;">Inspection Data</h2>
-    <div id="table-container">
-        <!-- Dynamic table content will be inserted here -->
-    </div>
-    <button id="export-csv">Export to CSV</button>
-    <script src="js/popup.js"></script> <!-- Link external JS -->
+    <div id="table-container">Loading...</div>
+
+    <script>
+        window.onload = () => {
+            const container = document.getElementById("table-container");
+
+            const stored = localStorage.getItem("formData");
+            if (!stored) {
+                container.innerHTML = "<p>No data found.</p>";
+                return;
+            }
+
+            const formData = JSON.parse(stored);
+            if (formData.length === 0) {
+                container.innerHTML = "<p>No data to display.</p>";
+                return;
+            }
+
+            const allFindings = Array.from(new Set(formData.flatMap(row => row.findings)));
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type of Equipment</th>
+                            <th>Location</th>
+                            <th>Ex Area</th>
+                            <th>TAG/ID</th>
+                            <th>Compliance</th>
+                            ${allFindings.map(f => `<th>${f}</th>`).join("")}
+                            <th>Resistance</th>
+                            <th>Current</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            formData.forEach(row => {
+                tableHtml += `
+                    <tr>
+                        <td>${row.typeEquipment}</td>
+                        <td>${row.location}</td>
+                        <td>${row.isExArea ? "Yes" : "No"}</td>
+                        <td>${row.tagId}</td>
+                        <td>${row.compliance}</td>
+                        ${allFindings.map(f => row.findings.includes(f) ? "<td>Yes</td>" : "<td></td>").join("")}
+                        <td>${row.resistance || ""}</td>
+                        <td>${row.current || ""}</td>
+                        <td>${row.remarks || ""}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += "</tbody></table>";
+            container.innerHTML = tableHtml;
+        };
+    </script>
 </body>
 </html>
