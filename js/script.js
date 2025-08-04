@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateFindingsDropdown() {
         const selectedType = typeEquipment.value;
         findingSelect.innerHTML = ""; // Clear previous options
+        findingSelect.selectedIndex = -1; // Deselect all
         const complianceElement = document.querySelector('input[name="compliance"]:checked');
         const compliance = complianceElement ? complianceElement.value : null;
 
@@ -182,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const input = document.createElement("input");
             input.type = "file";
             input.accept = "image/*";
-            input.capture = "environment"; // <-- enables camera
+            input.setAttribute("capture", "environment");  // ✅ enforce correct behavior
             input.id = `upload-${index}`;
             input.name = `upload-${index}`;
             input.dataset.finding = finding; // 👈 save finding as a custom attribute
