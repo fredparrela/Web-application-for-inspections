@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
         findingSelect.innerHTML = "";
         document.getElementById("tag-id").value = "";
         document.getElementById("type-equipment").value = "";
-
+        updateLocationDropdown();
         alert("Data saved");
     }
 });
