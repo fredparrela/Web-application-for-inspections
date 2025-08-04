@@ -182,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const input = document.createElement("input");
             input.type = "file";
             input.accept = "image/*";
+            input.capture = "environment"; // <-- enables camera
             input.id = `upload-${index}`;
             input.name = `upload-${index}`;
             input.dataset.finding = finding; // 👈 save finding as a custom attribute
