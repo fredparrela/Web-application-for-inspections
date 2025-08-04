@@ -13,66 +13,116 @@
             border: 1px solid black;
             padding: 6px;
         }
+        #export-btn {
+            margin: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <h2 style="text-align:center;">Inspection Data</h2>
+    <div style="text-align: center;">
+        <button id="export-btn">Export to CSV</button>
+    </div>
     <div id="table-container">Loading...</div>
 
     <script>
         window.onload = () => {
-            const container = document.getElementById("table-container");
+            try {
+                const container = document.getElementById("table-container");
+                const exportBtn = document.getElementById("export-btn");
 
-            const stored = localStorage.getItem("formData");
-            if (!stored) {
-                container.innerHTML = "<p>No data found.</p>";
-                return;
-            }
+                const stored = localStorage.getItem("formData");
+                if (!stored) {
+                    container.innerHTML = "<p>No data found.</p>";
+                    return;
+                }
 
-            const formData = JSON.parse(stored);
-            if (formData.length === 0) {
-                container.innerHTML = "<p>No data to display.</p>";
-                return;
-            }
+                const formData = JSON.parse(stored);
+                if (!Array.isArray(formData) || formData.length === 0) {
+                    container.innerHTML = "<p>No data to display.</p>";
+                    return;
+                }
 
-            const allFindings = Array.from(new Set(formData.flatMap(row => row.findings)));
+                const allFindings = Array.from(
+                    new Set(formData.flatMap(row => Array.isArray(row.findings) ? row.findings : []))
+                );
 
-            let tableHtml = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Type of Equipment</th>
-                            <th>Location</th>
-                            <th>Ex Area</th>
-                            <th>TAG/ID</th>
-                            <th>Compliance</th>
-                            ${allFindings.map(f => `<th>${f}</th>`).join("")}
-                            <th>Resistance</th>
-                            <th>Current</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            formData.forEach(row => {
-                tableHtml += `
-                    <tr>
-                        <td>${row.typeEquipment}</td>
-                        <td>${row.location}</td>
-                        <td>${row.isExArea ? "Yes" : "No"}</td>
-                        <td>${row.tagId}</td>
-                        <td>${row.compliance}</td>
-                        ${allFindings.map(f => row.findings.includes(f) ? "<td>Yes</td>" : "<td></td>").join("")}
-                        <td>${row.resistance || ""}</td>
-                        <td>${row.current || ""}</td>
-                        <td>${row.remarks || ""}</td>
-                    </tr>
+                // Gera tabela
+                let tableHtml = `
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type of Equipment</th>
+                                <th>Location</th>
+                                <th>Ex Area</th>
+                                <th>TAG/ID</th>
+                                <th>Compliance</th>
+                                ${allFindings.map(f => `<th>${f}</th>`).join("")}
+                                <th>Resistance</th>
+                                <th>Current</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
-            });
 
-            tableHtml += "</tbody></table>";
-            container.innerHTML = tableHtml;
+                formData.forEach(row => {
+                    tableHtml += `
+                        <tr>
+                            <td>${row.typeEquipment}</td>
+                            <td>${row.location}</td>
+                            <td>${row.isExArea ? "Yes" : "No"}</td>
+                            <td>${row.tagId}</td>
+                            <td>${row.compliance}</td>
+                            ${allFindings.map(f => (row.findings || []).includes(f) ? "<td>Yes</td>" : "<td></td>").join("")}
+                            <td>${row.resistance || ""}</td>
+                            <td>${row.current || ""}</td>
+                            <td>${row.remarks || ""}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += "</tbody></table>";
+                container.innerHTML = tableHtml;
+
+                // Exportar para CSV
+                exportBtn.onclick = () => {
+                    const rows = [["Type of Equipment", "Location", "Ex Area", "TAG/ID", "Compliance", ...allFindings, "Resistance", "Current", "Remarks"]];
+                    
+                    formData.forEach(row => {
+                        const dataRow = [
+                            row.typeEquipment,
+                            row.location,
+                            row.isExArea ? "Yes" : "No",
+                            row.tagId,
+                            row.compliance,
+                            ...allFindings.map(f => (row.findings || []).includes(f) ? "Yes" : ""),
+                            row.resistance || "",
+                            row.current || "",
+                            row.remarks || ""
+                        ];
+                        rows.push(dataRow);
+                    });
+
+                    // Converte para CSV
+                    const csvContent = rows.map(r => r.map(cell => `"${(cell || "").toString().replace(/"/g, '""')}"`).join(",")).join("\n");
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "inspection_data.csv";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                };
+            } catch (error) {
+                console.error("Erro ao carregar os dados:", error);
+                document.getElementById("table-container").innerHTML = `<p style="color:red;">Erro ao carregar os dados. Veja o console (F12).</p>`;
+            }
         };
     </script>
 </body>
