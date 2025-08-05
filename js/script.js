@@ -12,10 +12,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmFindingsBtn = document.getElementById("confirmFindingsBtn");
     const uploadContainer = document.getElementById("uploadContainer");
 
+    let inspectionCount = 0;
+    //const inspectionCounterDisplay = document.getElementById("inspection-counter");
+
     // Call these functions on page load
     loadLocations();
     loadFormDataFromLocalStorage();
     updateLocationDropdown();
+    updateInspectionCount()
+
+function updateInspectionCount() {
+    const table = document.getElementById("inspection-table");
+    const counterElement = document.getElementById("inspection-counter");
+
+    if (!counterElement) {
+        console.warn("Counter element not found.");
+        return;
+    }
+
+    // Se a tabela não existe ainda, assume 0
+    const count = table ? table.querySelectorAll("tbody tr").length : 0;
+    counterElement.textContent = count;
+   
+}
+
 
     // Findings Data
     const baseFindings = ["ID TAG", "Cable Tag", "Grounding", "Warning Sign", "External Condition","Accessible","Others"];
@@ -155,8 +175,8 @@ function updateFindingsDropdown(reset = false) {
         option.value = "";
         option.textContent = "No findings";
         option.disabled = true;
-        if (reset) option.selected = true;
-        findingSelect.appendChild(option);
+        //if (reset) option.selected = true;
+        //findingSelect.appendChild(option);
     } else {
         if (reset) {
             //const placeholderOption = document.createElement("option");
@@ -294,6 +314,9 @@ function updateFindingsDropdown(reset = false) {
         updateFindingsDropdown(true);
         findingSelect.disabled = false;
         confirmFindingsBtn.disabled = false;
+        //inspectionCount++;
+        //inspectionCounterDisplay.textContent = inspectionCount;
+        updateInspectionCount()
         alert("Data saved");
     }
 });
