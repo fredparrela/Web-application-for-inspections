@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateLocationDropdown();
 
     // Findings Data
-    const baseFindings = ["ID TAG", "Cable Tag", "Grounding", "Warning Sign", "Exterior Damage"];
+    const baseFindings = ["ID TAG", "Cable Tag", "Grounding", "Warning Sign", "External Condition","Accessible","Others"];
     const findingsData = {
         "Junction Box": [...baseFindings],
         "Panel": [...baseFindings, "ON/OFF Stickers", "Live Parts Protected", "Indication Light Colour"],
@@ -143,29 +143,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Populate findings dropdown dynamically
-    function updateFindingsDropdown() {
-        const selectedType = typeEquipment.value;
-        findingSelect.innerHTML = ""; // Clear previous options
-        findingSelect.selectedIndex = -1; // Deselect all
-        const complianceElement = document.querySelector('input[name="compliance"]:checked');
-        const compliance = complianceElement ? complianceElement.value : null;
+function updateFindingsDropdown(reset = false) {
+    const selectedType = typeEquipment.value;
+    findingSelect.innerHTML = "";
 
-        if (compliance === "Yes") {
-            const option = document.createElement("option");
-            option.value = "";
-            option.textContent = "No findings";
-            option.disabled = true;
-            findingSelect.appendChild(option);
-        } else {
-            const findings = findingsData[selectedType] || [];
-            findings.forEach(finding => {
-                const option = document.createElement("option");
-                option.value = finding;
-                option.textContent = finding;
-                findingSelect.appendChild(option);
-            });
+    const complianceElement = document.querySelector('input[name="compliance"]:checked');
+    const compliance = complianceElement ? complianceElement.value : null;
+
+    if (compliance === "Yes") {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No findings";
+        option.disabled = true;
+        if (reset) option.selected = true;
+        findingSelect.appendChild(option);
+    } else {
+        if (reset) {
+            //const placeholderOption = document.createElement("option");
+            //placeholderOption.value = "";
+            //placeholderOption.textContent = "-- Select finding --";
+           // placeholderOption.disabled = true;
+            //placeholderOption.selected = true;
+            //findingSelect.appendChild(placeholderOption);
         }
+
+        const findings = findingsData[selectedType] || [];
+        findings.forEach(finding => {
+            const option = document.createElement("option");
+            option.value = finding;
+            option.textContent = finding;
+            findingSelect.appendChild(option);
+        });
     }
+}
 
     
     confirmFindingsBtn.addEventListener("click", () => {
@@ -277,10 +287,13 @@ document.addEventListener("DOMContentLoaded", () => {
         saveFormDataToLocalStorage();
 
         // Clear fields
-        findingSelect.innerHTML = "";
+        //findingSelect.innerHTML = "";
         document.getElementById("tag-id").value = "";
         document.getElementById("type-equipment").value = "";
         updateLocationDropdown();
+        updateFindingsDropdown(true);
+        findingSelect.disabled = false;
+        confirmFindingsBtn.disabled = false;
         alert("Data saved");
     }
 });
@@ -371,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     window.onload = () => {
-        const viewTableButton = document.getElementById("viewTableButton");
+         const viewTableButton = document.getElementById("view-table");
 
         if (viewTableButton) {
             viewTableButton.addEventListener("click", () => {
