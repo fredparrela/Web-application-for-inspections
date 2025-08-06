@@ -22,19 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
     updateInspectionCount()
 
 function updateInspectionCount() {
-    const table = document.getElementById("inspection-table");
-    const counterElement = document.getElementById("inspection-counter");
-
-    if (!counterElement) {
-        console.warn("Counter element not found.");
-        return;
+        const inspectionCounterDisplay = document.getElementById("inspection-counter");
+        inspectionCounterDisplay.textContent = formData.length;
     }
-
-    // Se a tabela não existe ainda, assume 0
-    const count = table ? table.querySelectorAll("tbody tr").length : 0;
-    counterElement.textContent = count;
-   
-}
 
 
     // Findings Data
@@ -264,10 +254,7 @@ function updateFindingsDropdown(reset = false) {
         radio.addEventListener("change", updateFindingsDropdown);
     });
 
-
-
    // Save form data
-
    saveButton.addEventListener("click", () => {
     const selectedType = typeEquipment.value;
     const locationName = locationSelect.value.trim();
@@ -317,93 +304,18 @@ function updateFindingsDropdown(reset = false) {
         //inspectionCount++;
         //inspectionCounterDisplay.textContent = inspectionCount;
         updateInspectionCount()
+
         alert("Data saved");
     }
 });
 
-    /*
-    // Save form data
-    saveButton.addEventListener("click", () => {
-        const selectedType = typeEquipment.value;
-        const location = locationSelect.value.trim();
-        const tagId = document.getElementById("tag-id").value.trim();
-        const remarks = document.getElementById("remarks").value.trim();
-        const complianceElement = document.querySelector('input[name="compliance"]:checked');
-        const compliance = complianceElement ? complianceElement.value : null;
-        const selectedFindings = Array.from(findingSelect.selectedOptions).map(option => option.value);
-        
 
-
-        if (!tagId || !location || !selectedType || !compliance) {
-            let errorMessage = "Please fix the following issues:";
-            if (!tagId) errorMessage += "\n- TAG/ID Number is required.";
-            if (!location) errorMessage += "\n- Location is required.";
-            if (!selectedType) errorMessage += "\n- Type of equipment is required.";
-            if (!compliance) errorMessage += "\n- Select Yes or No for Compliance.";
-            alert(errorMessage);
-        } else {
-            formData.push({ typeEquipment: selectedType, location, tagId, remarks, compliance, findings: selectedFindings });
-            saveFormDataToLocalStorage();
-            //alert("Data saved successfully!");
-
-            //document.querySelector("form").reset();
-            findingSelect.innerHTML = "";
-            document.getElementById("tag-id").value = "";
-            document.getElementById("type-equipment").value = "";
-            alert("Data saved");
-            
-        }
-    });
-   */
     // Save formData to localStorage
     function saveFormDataToLocalStorage() {
         localStorage.setItem("formData", JSON.stringify(formData));
         //loadIdMapsFromLocalStorage();
     }
-    /*
-    // View table data in a popup
-    viewTableButton.addEventListener("click", () => {
-        if (formData.length === 0) {
-            alert("No data to display!");
-            return;
-        }
 
-        const allFindings = Array.from(new Set(formData.flatMap(row => row.findings)));
-        let tableHtml = `
-            <table id="data-table" border="1" style="width:100%; border-collapse:collapse; text-align:center;">
-                <thead>
-                    <tr>
-                        <th>Type of Equipment</th>
-                        <th>Location</th>
-                        <th>TAG/ID</th>
-                        <th>Compliance</th>
-                        ${allFindings.map(finding => `<th>${finding}</th>`).join("")}
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        formData.forEach(row => {
-            tableHtml += `
-                <tr>
-                    <td>${row.typeEquipment}</td>
-                    <td>${row.location}</td>
-                    <td>${row.tagId}</td>
-                    <td>${row.compliance}</td>
-                    ${allFindings.map(finding => row.findings.includes(finding) ? `<td>Yes</td>` : `<td></td>`).join("")}
-                    <td>${row.remarks}</td>
-                </tr>
-            `;
-        });
-
-        tableHtml += `</tbody></table>`;
-        const popupWindow = window.open("popup.html", "Saved Data", "width=800,height=600");
-        popupWindow.onload = () => {
-            popupWindow.document.getElementById("table-container").innerHTML = tableHtml;
-        };
-    });
-    */
 
 
     window.onload = () => {
@@ -431,44 +343,7 @@ function updateFindingsDropdown(reset = false) {
         }
     });
 
-        /*
-        const video = document.getElementById("cameraStream");  
-        const startCameraBtn = document.getElementById("startCameraBtn");
-        const captureImageBtn = document.getElementById("captureImageBtn");
-        
-        let cameraStream = null;
-    
-        if (!video || !startCameraBtn || !captureImageBtn) {
-            console.error("Error: One or more elements are missing.");
-            return;
-        }
-    
-       
 
-        startCameraBtn.addEventListener('click', () => {
-            if (!cameraStream) {
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" } // Prefers rear camera but won't fail if unavailable
-                })
-                .then((stream) => {
-                    const video = document.getElementById("cameraStream");
-                    if (video) {
-                        video.srcObject = stream;
-                        video.play();
-                        cameraStream = stream; // Store stream globally
-                        video.style.display = 'block';
-                        captureImageBtn.disabled = false;
-                        console.log("Camera started successfully.");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error accessing camera: ", error);
-                });
-            } else {
-                console.log("Camera is already running.");
-            }
-        });
-        */
         document.getElementById("uploadBtn").addEventListener("change", async function (event) {
             const files = event.target.files;
             if (!files.length) return;
@@ -517,52 +392,6 @@ function updateFindingsDropdown(reset = false) {
             document.getElementById("uploadBtn").value = ""; // Clears file selection
         });
         
-        
-        /*
-        // Capture Image
-        captureImageBtn.addEventListener('click', () => {
-            if (cameraStream) {
-                const context = canvas.getContext('2d');
-                const imageData = canvas.toDataURL("image/png");
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Convert to image
-                capturedImage.src = imageData;
-                capturedImage.style.display = 'block';
-                            // Save image as file with tagId
-                saveImage(imageData, 
-                    `${typeEquipment.value.trim()}
-                     ${locationSelect.value.trim()}
-                     ${document.getElementById("tag-id").value.trim()}.png`);
-            }
-        });
-        
-            // Function to save image
-        function saveImage(dataUrl, filename) {
-            const a = document.createElement("a");
-            a.href = dataUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-            // Stop Camera
-        stopCameraBtn.addEventListener('click', () => {
-            if (cameraStream) {
-                let tracks = cameraStream.getTracks();
-                tracks.forEach(track => track.stop()); // Stop all video tracks
-                video.srcObject = null;
-                cameraStream = null;
-                video.style.display = 'none';
-                //startCameraBtn.style.display = 'inline-block';
-                //stopCameraBtn.style.display = 'none'; // Hide Stop Button
-                //captureImageBtn.disabled = true;
-                console.log("Camera stopped successfully.");
-            }
-        });
-        */
     function generateRandomData() {
         const types = ["Junction Box", "Panel", "Motor", "Power Outlet", "Command Switch","Others"];
         const locations = ["Room 101", "Basement", "Main Hall", "Engine Room"];

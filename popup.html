@@ -76,7 +76,7 @@
                             <td>${row.isExArea ? "Yes" : "No"}</td>
                             <td>${row.tagId}</td>
                             <td>${row.compliance}</td>
-                            ${allFindings.map(f => (row.findings || []).includes(f) ? "<td>Yes</td>" : "<td></td>").join("")}
+                            ${allFindings.map(f => (row.findings || []).includes(f) ? "<td>X</td>" : "<td></td>").join("")}
                             <td>${row.resistance || ""}</td>
                             <td>${row.current || ""}</td>
                             <td>${row.remarks || ""}</td>
