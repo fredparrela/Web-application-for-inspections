@@ -98,7 +98,7 @@
                             row.isExArea ? "Yes" : "No",
                             row.tagId,
                             row.compliance,
-                            ...allFindings.map(f => (row.findings || []).includes(f) ? "Yes" : ""),
+                            ...allFindings.map(f => (row.findings || []).includes(f) ? "X" : ""),
                             row.resistance || "",
                             row.current || "",
                             row.remarks || ""
