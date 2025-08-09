@@ -258,6 +258,8 @@ function updateFindingsDropdown(reset = false) {
    saveButton.addEventListener("click", () => {
     const selectedType = typeEquipment.value;
     const locationName = locationSelect.value.trim();
+    const description = document.getElementById("Equipment-des").value.trim();
+
     const tagId = document.getElementById("tag-id").value.trim();
     const remarks = document.getElementById("remarks").value.trim();
     const complianceElement = document.querySelector('input[name="compliance"]:checked');
@@ -284,6 +286,7 @@ function updateFindingsDropdown(reset = false) {
             location: locationName,
             isExArea: isEx,
             tagId,
+            Description: description,
             remarks,
             compliance,
             findings: selectedFindings,

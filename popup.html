@@ -58,6 +58,7 @@
                                 <th>Location</th>
                                 <th>Ex Area</th>
                                 <th>TAG/ID</th>
+                                <th>Description</th>
                                 <th>Compliance</th>
                                 ${allFindings.map(f => `<th>${f}</th>`).join("")}
                                 <th>Resistance</th>
@@ -75,6 +76,7 @@
                             <td>${row.location}</td>
                             <td>${row.isExArea ? "Yes" : "No"}</td>
                             <td>${row.tagId}</td>
+                            <td>${row.Description}</td>
                             <td>${row.compliance}</td>
                             ${allFindings.map(f => (row.findings || []).includes(f) ? "<td>X</td>" : "<td></td>").join("")}
                             <td>${row.resistance || ""}</td>
@@ -89,7 +91,7 @@
 
                 // Exportar para CSV
                 exportBtn.onclick = () => {
-                    const rows = [["Type of Equipment", "Location", "Ex Area", "TAG/ID", "Compliance", ...allFindings, "Resistance", "Current", "Remarks"]];
+                    const rows = [["Type of Equipment", "Location", "Ex Area", "TAG/ID","Description", "Compliance", ...allFindings, "Resistance", "Current", "Remarks"]];
                     
                     formData.forEach(row => {
                         const dataRow = [
@@ -97,6 +99,7 @@
                             row.location,
                             row.isExArea ? "Yes" : "No",
                             row.tagId,
+                            row.Description,
                             row.compliance,
                             ...allFindings.map(f => (row.findings || []).includes(f) ? "X" : ""),
                             row.resistance || "",
