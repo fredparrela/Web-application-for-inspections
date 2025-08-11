@@ -11,7 +11,7 @@
     <div class="form-container">
 
         <h1>NR 10 Inspection Form </h1>
-        <p>V.0.1.1</p>
+        <p>V.0.1.2</p>
         <form id="inspection-form">
             <!-- Type of Equipment -->
             <label for="type-equipment">Type of equipment</label>
@@ -32,6 +32,13 @@
         <select id="location" name="location">
             <option value="">--Select Location--</option>
         </select>
+        <button type="button" id="add-location">Add Location</button>
+        
+        <h3>Equipment List Configuration</h3>
+        <p>Please upload a CSV file with the columns 'tag' and 'description'.</p>
+        <input type="file" id="csvFile" accept=".csv">
+        <button id="carregarBtn">Update list</button>
+        
         
         <fieldset id="ex-area-fieldset">
             <legend>Ex Area</legend>
@@ -43,15 +50,20 @@
             </label>
         </fieldset>
         
-        <button type="button" id="add-location">Add Location</button>
         
+        
+                    <!-- TAG / ID Number -->
+            <div class="autocomplete-container">
+                <label for="tag-id">Equipment TAG / ID Number</label>
+                <input type="text" id="tag-id" name="tag-id" placeholder="Enter TAG / ID Number">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+
+
             <!-- Description -->
-            <label for="tag-id">Equipment Description</label>
+            <label for="Equipment-des">Equipment Description</label>
             <input type="text" id="Equipment-des" name="Equipment-des" placeholder="Enter Equipment Description">
 
-            <!-- TAG / ID Number -->
-            <label for="tag-id">Equipment TAG / ID Number</label>
-            <input type="text" id="tag-id" name="tag-id" placeholder="Enter TAG / ID Number">
 
             <!-- Compliance -->
             

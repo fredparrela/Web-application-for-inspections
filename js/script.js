@@ -11,15 +11,121 @@ document.addEventListener("DOMContentLoaded", () => {
     let isEx = false; // Global variable to track if the location is Ex
     const confirmFindingsBtn = document.getElementById("confirmFindingsBtn");
     const uploadContainer = document.getElementById("uploadContainer");
-
+    const botaoCarregar = document.getElementById('carregarBtn');
+    
     let inspectionCount = 0;
+    let listaEquipamentos = [];
     //const inspectionCounterDisplay = document.getElementById("inspection-counter");
 
     // Call these functions on page load
     loadLocations();
     loadFormDataFromLocalStorage();
     updateLocationDropdown();
-    updateInspectionCount()
+    updateInspectionCount();
+    carregarListaDoLocalStorage()
+
+const tagInput = document.getElementById('tag-id');
+const description = document.getElementById('Equipment-des');
+const autocompleteList = document.getElementById('autocomplete-list');
+
+tagInput.addEventListener('input', function() {
+    const inputValue = this.value.toUpperCase();
+    closeAllLists();
+
+    if (!inputValue) return;
+
+    const matchedEquipamentos = listaEquipamentos.filter(equipamento =>
+        equipamento.tag.toUpperCase().includes(inputValue)
+    );
+
+    if (matchedEquipamentos.length === 0) {
+        const noMatchItem = document.createElement('div');
+        noMatchItem.textContent = `TAG ${inputValue} não encontrada na lista.`;
+        autocompleteList.appendChild(noMatchItem);
+        return;
+    }
+
+    matchedEquipamentos.forEach(equipamento => {
+        const item = document.createElement('div');
+        item.innerHTML = `<strong>${equipamento.tag.substr(0, inputValue.length)}</strong>` +
+                         equipamento.tag.substr(inputValue.length) +
+                         ` - ${equipamento.descricao}`;
+        
+        item.addEventListener('click', function() {
+            tagInput.value = equipamento.tag;
+            description.value = equipamento.descricao;
+            closeAllLists();
+        });
+
+        autocompleteList.appendChild(item);
+    });
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target !== tagInput) {
+        closeAllLists();
+    }
+});
+
+function closeAllLists() {
+    autocompleteList.innerHTML = '';
+}
+
+
+// --- 1. FUNÇÃO PARA CARREGAR A LISTA DO LOCALSTORAGE ---
+// Esta função é chamada ao carregar a página
+function carregarListaDoLocalStorage() {
+    const equipamentosSalvos = localStorage.getItem('listaEquipamentos');
+    if (equipamentosSalvos) {
+        listaEquipamentos = JSON.parse(equipamentosSalvos);
+        console.log('Lista de equipamentos carregada do localStorage.');
+    }
+}
+
+// --- 2. FUNÇÃO PARA PROCESSAR O ARQUIVO CSV ---
+// Esta função é chamada pelo botão de upload
+botaoCarregar.addEventListener('click', carregarArquivoCSV);
+function carregarArquivoCSV() {
+        const file = document.getElementById('csvFile').files[0];
+        alert('Okay');
+        if (!file) {
+            alert('Por favor, selecione um arquivo CSV para carregar.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const linhas = text.split('\n');
+            
+            const novaLista = [];
+            const cabecalho = linhas[0].split(',').map(h => h.trim()); // Pega o cabeçalho
+            
+            // Verifica se o cabeçalho tem as colunas esperadas
+            if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
+                alert('The CSV file should contain the columns "tag", "description".');
+                return;
+            }
+
+            for (let i = 1; i < linhas.length; i++) {
+                const dados = linhas[i].split(',').map(d => d.trim());
+                if (dados.length === cabecalho.length) {
+                    const equipamento = {};
+                    for (let j = 0; j < cabecalho.length; j++) {
+                        equipamento[cabecalho[j]] = dados[j];
+                    }
+                    novaLista.push(equipamento);
+                }
+            }
+            listaEquipamentos = novaLista;
+            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+            alert('Lista de equipamentos carregada com sucesso!');
+            console.log('Nova lista de equipamentos salva no localStorage.');
+        };
+        reader.readAsText(file);
+    }
+
+
 
 function updateInspectionCount() {
         const inspectionCounterDisplay = document.getElementById("inspection-counter");
@@ -211,7 +317,6 @@ function updateFindingsDropdown(reset = false) {
             input.addEventListener("change", async () => {
                 const file = input.files[0];
                 const findingPart = input.dataset.finding.replace(/\s+/g, "_");
-    
                 const typeEquipment = document.getElementById("type-equipment").value.trim();
                 const location = locationSelect.value.trim();
                 const tagId = document.getElementById("tag-id").value.trim();
