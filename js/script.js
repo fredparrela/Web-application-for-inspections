@@ -100,7 +100,7 @@ function carregarArquivoCSV() {
             
             const novaLista = [];
             const cabecalho = linhas[0].split(',').map(h => h.trim()); // Pega o cabeçalho
-            
+            alert(cabecalho);
             // Verifica se o cabeçalho tem as colunas esperadas
             if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
                 alert('The CSV file should contain the columns "tag", "description".');
