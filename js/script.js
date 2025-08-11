@@ -82,48 +82,101 @@ function carregarListaDoLocalStorage() {
     }
 }
 
-// --- 2. FUNÇÃO PARA PROCESSAR O ARQUIVO CSV ---
-// Esta função é chamada pelo botão de upload
+// BOTÃO
 botaoCarregar.addEventListener('click', carregarArquivoCSV);
+
 function carregarArquivoCSV() {
-        const file = document.getElementById('csvFile').files[0];
-        alert('Okay');
-        if (!file) {
-            alert('Por favor, selecione um arquivo CSV para carregar.');
-            return;
+  const fileInput = document.getElementById('csvFile');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if (!file) {
+    alert('Por favor, selecione um arquivo CSV para carregar.');
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      // 1) Texto cru + remove BOM
+      const raw = (e.target.result || '').replace(/^\uFEFF/, '');
+
+      // 2) Quebra de linhas robusta e ignora linhas vazias
+      const linhas = raw.split(/\r?\n/).filter(l => l.trim() !== '');
+      if (linhas.length < 2) {
+        alert('Arquivo CSV vazio ou com poucas linhas.');
+        return;
+      }
+
+      // 3) Detecta delimitador (vírgula ou ponto-e-vírgula)
+      const guessDelimiter = (s) => {
+        const c = (pat) => (s.match(pat) || []).length;
+        return c(/;/g) > c(/,/g) ? ';' : ',';
+      };
+      const delimiter = guessDelimiter(linhas[0]);
+
+      // 4) Normaliza cabeçalhos (minúsculas, sem acentos, trim)
+      const normalizeField = (s) => s
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+        .toLowerCase()
+        .trim();
+
+      const cabecalhoOriginal = linhas[0].split(delimiter).map(h => h.trim());
+      const cabecalho = cabecalhoOriginal.map(normalizeField);
+
+      // 5) Verifica colunas esperadas ("tag" e "descricao")
+      if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
+        alert(
+          'O CSV deve conter as colunas "tag" e "descricao" no cabeçalho.\n' +
+          'Detectei: ' + cabecalhoOriginal.join(' | ')
+        );
+        return;
+      }
+
+      // 6) Constrói objetos por linha
+      const idxTag = cabecalho.indexOf('tag');
+      const idxDesc = cabecalho.indexOf('descricao');
+
+      const novaLista = [];
+      for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i];
+        // divide por delimitador (simples; se precisar lidar com campos entre aspas, dá pra melhorar)
+        const dados = linha.split(delimiter).map(d => d.trim());
+        if (dados.length !== cabecalho.length) {
+          // pula linhas quebradas/incompletas
+          continue;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const linhas = text.split('\n');
-            
-            const novaLista = [];
-            const cabecalho = linhas[0].split(',').map(h => h.trim()); // Pega o cabeçalho
-            alert(cabecalho);
-            // Verifica se o cabeçalho tem as colunas esperadas
-            if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
-                alert('The CSV file should contain the columns "tag", "description".');
-                return;
-            }
+        const item = {};
+        for (let j = 0; j < cabecalho.length; j++) {
+          item[cabecalho[j]] = dados[j];
+        }
 
-            for (let i = 1; i < linhas.length; i++) {
-                const dados = linhas[i].split(',').map(d => d.trim());
-                if (dados.length === cabecalho.length) {
-                    const equipamento = {};
-                    for (let j = 0; j < cabecalho.length; j++) {
-                        equipamento[cabecalho[j]] = dados[j];
-                    }
-                    novaLista.push(equipamento);
-                }
-            }
-            listaEquipamentos = novaLista;
-            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-            alert('Lista de equipamentos carregada com sucesso!');
-            console.log('Nova lista de equipamentos salva no localStorage.');
-        };
-        reader.readAsText(file);
+        // garante chaves legíveis também em pt
+        item.tag = item.tag ?? dados[idxTag] ?? '';
+        item.descricao = item.descricao ?? dados[idxDesc] ?? '';
+
+        // ignora linhas totalmente vazias
+        if ((item.tag || item.descricao)) {
+          novaLista.push(item);
+        }
+      }
+
+      // 7) Salva
+      listaEquipamentos = novaLista;
+      localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+
+      alert(`Lista de equipamentos carregada com sucesso! Itens: ${listaEquipamentos.length}`);
+      console.log('Nova lista de equipamentos salva no localStorage.', listaEquipamentos);
+    } catch (err) {
+      console.error('Erro ao processar CSV:', err);
+      alert('Houve um erro ao processar o CSV. Veja o console para detalhes.');
     }
+  };
+
+  // UTF-8 funciona melhor em mobile
+  reader.readAsText(file, 'UTF-8');
+}
 
 
 
