@@ -11,7 +11,7 @@
     <div class="form-container">
 
         <h1>NR 10 Inspection Form </h1>
-        <p>V.0.1.3</p>
+        <p>V.0.1.4</p>
         <form id="inspection-form">
             <!-- Type of Equipment -->
             <label for="type-equipment">Type of equipment</label>
@@ -26,7 +26,7 @@
                 <option value="Others">Others</option>
             </select>
 
-        
+
         <!-- Location Section -->
         <label for="location">Select Location</label>
         <select id="location" name="location">
@@ -83,8 +83,29 @@
             <!-- Upload General PIC -->
             <h2>Upload General PIC</h2>
             <input type="file" id="uploadBtn" multiple><br><br>
+                            <h2>Preset of Findings</h2>
+            <fieldset class="radio-group">
+                <legend>Preset</legend>
+                <label for="preset-yes">
+                    <input type="radio" id="preset-yes" name="preset" value="Yes"> Yes
+                </label>
+                <label for="preset-no">
+                    <input type="radio" id="preset-no" name="preset" value="No" > No
+                </label>
+            </fieldset>
+            <button id="preset-manage-btn" type="button">Manage presets</button>
+            <!-- Modal / Container for managing presets -->
+            <div id="preset-container">
+                <h3>Select Findings for Preset</h3>
+                <select id="preset-list" multiple size="8"></select>
+                <button id="preset-save-btn">Save Preset</button>
+            </div>
 
-
+            <!-- Current Preset Display -->
+            <div id="currentPresetDisplay" style="margin-bottom: 5px; font-size: 0.9em; color: #555;">
+                Preset: <span id="currentPresetValues">None</span>
+            </div>
+                    
             <!-- Finding -->
             <label for="finding">Finding</label>
             <select id="finding" name="finding" multiple size="5">

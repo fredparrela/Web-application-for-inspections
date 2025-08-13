@@ -23,10 +23,156 @@ document.addEventListener("DOMContentLoaded", () => {
     updateLocationDropdown();
     updateInspectionCount();
     carregarListaDoLocalStorage()
+    updatePresetDisplay();
 
 const tagInput = document.getElementById('tag-id');
 const description = document.getElementById('Equipment-des');
 const autocompleteList = document.getElementById('autocomplete-list');
+const presetBtn = document.getElementById("preset-manage-btn");
+const presetContainer = document.getElementById("preset-container");
+const presetList = document.getElementById("preset-list");
+const presetSaveBtn = document.getElementById("preset-save-btn");
+const presetYes = document.getElementById("preset-yes");
+const presetNo = document.getElementById("preset-no");
+const presetSelect = document.getElementById("preset-list");
+const displayPreset= document.getElementById("currentPresetValues");
+let currentPreset = [];
+
+// Location update
+locationSelect.addEventListener("change", () => {
+  localStorage.setItem("lastSelectedLocation", locationSelect.value);
+});
+
+
+// start hidden
+presetContainer.style.display = "none";
+// Listen to both Yes and No
+presetNo.addEventListener("change", refreshPresetDisplay);
+presetYes.addEventListener("change", refreshPresetDisplay);
+
+// Run on page load
+refreshPresetDisplay();
+
+// Only open if "Yes"
+presetBtn.addEventListener("click", () => {
+    if (!presetYes.checked) {
+        alert('Switch "Preset" to Yes to manage presets.');
+        return;
+    }
+    // show + refresh list (or toggle if you prefer)
+    updatePresetList(); // make sure this fills <select id="preset-list">
+    presetContainer.style.display = "block";
+});
+
+function refreshPresetDisplay() {
+    if (presetNo.checked) {
+        presetContainer.style.display = "none";
+        displayPreset.textContent = "None";
+        return;
+    }
+
+    // Get preset for current equipment type (fallback to "Others")
+    const eqType = (typeEquipment?.value || "Others").trim();
+    // If you saved to localStorage:
+    const list = loadPresetFromLS(eqType); // returns [] if none
+    // Or, if you keep it in memory: const list = currentPreset;
+
+    displayPreset.textContent = list.length ? list.join(", ") : "None";
+}
+
+
+
+
+// Save from <select multiple>
+presetSaveBtn.addEventListener("click", () => {
+  // read selected options
+  currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
+
+  // save per equipment type
+  const eqType = "Others";
+  savePresetToLS(eqType, currentPreset);
+
+  alert("Preset saved: " + currentPreset.join(", "));
+  presetContainer.style.display = "none";
+});
+
+
+// --- Load last choice ---
+const savedPresetChoice = localStorage.getItem("presetChoice");
+if (savedPresetChoice === "Yes") {
+    presetYes.checked = true;
+} else if (savedPresetChoice === "No") {
+    presetNo.checked = true;
+}
+
+// --- Save choice when changed ---
+[presetYes, presetNo].forEach(radio => {
+    radio.addEventListener("change", () => {
+        if (radio.checked) {
+            localStorage.setItem("presetChoice", radio.value);
+        }
+    });
+});
+
+
+
+// ---- LocalStorage helpers ----
+function savePresetToLS(type, list) {
+  try {
+    localStorage.setItem(`preset:${type}`, JSON.stringify(list || []));
+  } catch (e) {
+    console.error("Failed to save preset:", e);
+  }
+}
+
+function loadPresetFromLS(type) {
+  try {
+    const raw = localStorage.getItem(`preset:${type}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Failed to load preset:", e);
+    return [];
+  }
+}
+
+function updatePresetList() {
+    const findings = findingsData["Others"] || [];
+    const presetSelect = document.getElementById("preset-list"); // <select id="preset-list" multiple>
+    presetSelect.innerHTML = "";
+
+    findings.forEach(finding => {
+        const option = document.createElement("option");
+        option.value = finding;
+        option.textContent = finding;
+        option.selected = currentPreset.includes(finding);
+        presetSelect.appendChild(option);
+    });
+}
+
+
+function updatePresetDisplay() {
+    const eqType = (typeEquipment?.value || "Others").trim();
+    const presetList = loadPresetFromLS(eqType); // or use currentPreset
+    const display = document.getElementById("currentPresetValues");
+
+    if (presetList.length > 0) {
+        display.textContent = presetList.join(", ");
+    } else {
+        display.textContent = "None";
+    }
+}
+
+// Call it after saving a preset
+presetSaveBtn.addEventListener("click", () => {
+    currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
+    const eqType = (typeEquipment?.value || "Others").trim();
+    savePresetToLS(eqType, currentPreset);
+
+    updatePresetDisplay(); // refresh UI
+
+    alert("Preset saved: " + currentPreset.join(", "));
+    presetContainer.style.display = "none";
+});
 
 tagInput.addEventListener('input', function() {
     const inputValue = this.value.toUpperCase();
@@ -197,17 +343,22 @@ function updateInspectionCount() {
         "Environment Conditions": ["Isolation Mats","House Keeping","Electrical Room used for Storage", "Doors Entry Sign", "Cable Trays Covered", "Hazardous Area Signal"],
         "Others": [...baseFindings, "ON/OFF Stickers", "Live Parts Protected", "Indication Light Colour", "Direction of Rotation Arrow"]
     };
-    // update location dropdown 
+
+    // Update location dropdown
     function updateLocationDropdown() {
         const lastLocationRaw = localStorage.getItem("locations");
         const locations = lastLocationRaw ? JSON.parse(lastLocationRaw) : [];
-    
+
         locationSelect.innerHTML = `<option value="">--Select Location--</option>`;
-    
-        // Get the last selected location name (optional)
-        const lastSelectedLocationName = locations.length > 0 ? locations[locations.length - 1].name : "";
-    
-        // Fill the dropdown
+
+        // Get the last selected location from storage (not last added)
+        const storedSelection = localStorage.getItem("lastSelectedLocation") || "";
+        const lastSelectedLocationName =
+            storedSelection && locations.some(l => l.name === storedSelection)
+                ? storedSelection
+                : (locations.length > 0 ? locations[0].name : ""); // fallback
+
+        // Fill dropdown
         locations.forEach(location => {
             const option = document.createElement("option");
             option.value = location.name;
@@ -217,17 +368,19 @@ function updateInspectionCount() {
             }
             locationSelect.appendChild(option);
         });
-    
-        // Find the selected location object
-        const selectedLocationObj = locations.find(loc => loc.name === lastSelectedLocationName);
+
+        // Set radio buttons based on this location
+        setExAreaRadios(lastSelectedLocationName, locations);
+    }
+
+    // Centralized function to set and lock Ex Area radios
+    function setExAreaRadios(selectedName, locations) {
+        const selectedLocationObj = locations.find(loc => loc.name === selectedName);
         const isEx = selectedLocationObj ? selectedLocationObj.isEx : false;
-    
-       // console.log("Last selected location name:", lastSelectedLocationName);
-       // console.log("isEx:", isEx);
-    
-        // Set and lock the radio buttons
+
         const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
         const noRadio = document.querySelector('input[name="exArea"][value="no"]');
+
         if (yesRadio && noRadio) {
             yesRadio.checked = isEx;
             noRadio.checked = !isEx;
@@ -235,36 +388,21 @@ function updateInspectionCount() {
             noRadio.disabled = true;
         }
     }
-    // Location select 
-    locationSelect.addEventListener("change", () => {
-        const selectedName = locationSelect.value;
-    
-        const lastLocationRaw = localStorage.getItem("locations");
-        const locations = lastLocationRaw ? JSON.parse(lastLocationRaw) : [];
-    
-        const selectedLocationObj = locations.find(loc => loc.name === selectedName);
-        const isEx = selectedLocationObj ? selectedLocationObj.isEx : false;
-    
-        const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
-        const noRadio = document.querySelector('input[name="exArea"][value="no"]');
-    
-        if (yesRadio && noRadio) {
-            yesRadio.checked = isEx;
-            noRadio.checked = !isEx;
-            yesRadio.disabled = true;
-            noRadio.disabled = true;
-        }
-    
-        //console.log(`Selected location: ${selectedName} | Ex Area: ${isEx}`);
-    });
-    
 
-    // Save the selected location to localStorage
+    // Handle location changes
     locationSelect.addEventListener("change", () => {
         const selectedLocation = locationSelect.value;
+
+        // Save to localStorage
         if (selectedLocation) {
             localStorage.setItem("lastSelectedLocation", selectedLocation);
         }
+
+        // Load locations list and update radios
+        const lastLocationRaw = localStorage.getItem("locations");
+        const locations = lastLocationRaw ? JSON.parse(lastLocationRaw) : [];
+
+        setExAreaRadios(selectedLocation, locations);
     });
 
     // Add a new location
@@ -346,65 +484,87 @@ function updateFindingsDropdown(reset = false) {
     }
 }
 
+
+// assumes:
+// let currentPreset = []; // managed elsewhere
+// findingSelect, confirmFindingsBtn, uploadContainer, locationSelect exist
+
+confirmFindingsBtn.addEventListener("click", () => {
+    const usePreset = document.querySelector('input[name="preset"]:checked')?.value === "Yes";
+    const manualSelected = Array.from(findingSelect.selectedOptions).map(opt => opt.value);
+    const fromPreset = usePreset ? loadPresetFromLS("Others") : [];
     
-    confirmFindingsBtn.addEventListener("click", () => {
-        findingSelect.disabled = true;
-        confirmFindingsBtn.disabled = true;
-        uploadContainer.innerHTML = "";
-    
-        const selectedFindings = Array.from(findingSelect.selectedOptions).map(option => option.value);
-    
-        selectedFindings.forEach((finding, index) => {
-            const label = document.createElement("label");
-            label.textContent = `Upload image for: ${finding}`;
-            label.setAttribute("for", `upload-${index}`);
-    
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = "image/*";
-            input.setAttribute("capture", "environment");  // ✅ enforce correct behavior
-            input.id = `upload-${index}`;
-            input.name = `upload-${index}`;
-            input.dataset.finding = finding; // 👈 save finding as a custom attribute
-    
-            input.addEventListener("change", async () => {
-                const file = input.files[0];
-                const findingPart = input.dataset.finding.replace(/\s+/g, "_");
-                const typeEquipment = document.getElementById("type-equipment").value.trim();
-                const location = locationSelect.value.trim();
-                const tagId = document.getElementById("tag-id").value.trim();
-    
-                if (!typeEquipment || !location || !tagId) {
-                    alert("Please fill in all fields before uploading images.");
-                    return;
-                }
-    
-                if (!file) {
-                    alert(`Please upload an image for: ${findingPart}`);
-                    return;
-                }
-    
-                const newFileName = `${findingPart}_${tagId}_${typeEquipment}_${location}.png`;
-                const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = newFileName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-            });
-    
-            const div = document.createElement("div");
-            div.style.marginTop = "10px";
-            div.appendChild(label);
-            div.appendChild(document.createElement("br"));
-            div.appendChild(input);
-    
-            uploadContainer.appendChild(div);
-            
-        });
+    // Combine & dedupe (keep order: preset first, then manual)
+    const selectedFindings = [...new Set([...fromPreset, ...manualSelected])];
+
+    if (selectedFindings.length === 0) {
+        alert("Please select at least one finding or define a preset.");
+        return;
+    }
+
+    // (optional) reflect combined selection in the UI so user sees what's used
+    Array.from(findingSelect.options).forEach(opt => {
+        opt.selected = selectedFindings.includes(opt.value);
     });
+
+    findingSelect.disabled = true;
+    confirmFindingsBtn.disabled = true;
+    uploadContainer.innerHTML = "";
+
+    selectedFindings.forEach((finding, index) => {
+        const label = document.createElement("label");
+        label.textContent = `Upload image for: ${finding}`;
+        label.setAttribute("for", `upload-${index}`);
+
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.setAttribute("capture", "environment");
+        input.id = `upload-${index}`;
+        input.name = `upload-${index}`;
+        input.dataset.finding = finding;
+
+        input.addEventListener("change", async () => {
+            const file = input.files[0];
+            const findingPart = input.dataset.finding.replace(/\s+/g, "_");
+            const typeEquipment = document.getElementById("type-equipment").value.trim();
+            const location = locationSelect.value.trim();
+            const tagId = document.getElementById("tag-id").value.trim();
+
+            if (!typeEquipment || !location || !tagId) {
+                alert("Please fill in all fields before uploading images.");
+                return;
+            }
+            if (!file) {
+                alert(`Please upload an image for: ${findingPart}`);
+                return;
+            }
+
+            // keep original extension if possible
+            const origName = file.name || "";
+            const ext = (origName.lastIndexOf(".") !== -1) ? origName.slice(origName.lastIndexOf(".")) : ".jpg";
+            const newFileName = `${findingPart}_${tagId}_${typeEquipment}_${location}${ext}`;
+
+            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = newFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        const div = document.createElement("div");
+        div.style.marginTop = "10px";
+        div.appendChild(label);
+        div.appendChild(document.createElement("br"));
+        div.appendChild(input);
+
+        uploadContainer.appendChild(div);
+    });
+});
+
+
     
     // Event listeners for dropdown updates
     typeEquipment.addEventListener("change", updateFindingsDropdown);
@@ -430,14 +590,22 @@ function updateFindingsDropdown(reset = false) {
     // ✅ Get Ex value from radio button
     const yesRadio = document.querySelector('input[name="exArea"][value="yes"]');
     const isEx = yesRadio ? yesRadio.checked : false;
+    let errorMessage = "Please fix the following issues:";
 
-    if (!tagId || !locationName || !selectedType || !compliance) {
-        let errorMessage = "Please fix the following issues:";
+    // Primeiro, verifica se é "No" e não há findings
+    if (compliance && compliance.toLowerCase() === "no" && selectedFindings.length === 0) {
+        errorMessage += "\n- At least one finding is required if compliance is No.";
+        alert(errorMessage);
+
+    // Depois, verifica os campos obrigatórios
+    } else if (!tagId || !locationName || !selectedType || !compliance) {
         if (!tagId) errorMessage += "\n- TAG/ID Number is required.";
         if (!locationName) errorMessage += "\n- Location is required.";
         if (!selectedType) errorMessage += "\n- Type of equipment is required.";
         if (!compliance) errorMessage += "\n- Select Yes or No for Compliance.";
         alert(errorMessage);
+
+    // Se passar por todas as validações, salva os dados
     } else {
         formData.push({
             typeEquipment: selectedType,
@@ -468,6 +636,7 @@ function updateFindingsDropdown(reset = false) {
 
         alert("Data saved");
     }
+
 });
 
 
