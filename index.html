@@ -11,7 +11,7 @@
     <div class="form-container">
 
         <h1>NR 10 Inspection Form </h1>
-        <p>V.0.1.4</p>
+        <p>V.0.1.5</p>
         <form id="inspection-form">
             <!-- Type of Equipment -->
             <label for="type-equipment">Type of equipment</label>
@@ -65,26 +65,13 @@
             <input type="text" id="Equipment-des" name="Equipment-des" placeholder="Enter Equipment Description">
 
 
-            <!-- Compliance -->
-            
-
-                
-                <div class="radio-group">
-                    <legend>Compliance</legend>
-                    <label for="compliance-yes">
-                        <input type="radio" id="compliance-yes" name="compliance" value="Yes"> Yes
-                    </label>
-                    <label for="compliance-no">
-                        <input type="radio" id="compliance-no" name="compliance" value="No"> No
-                    </label>
-                </div>
-            
-
             <!-- Upload General PIC -->
             <h2>Upload General PIC</h2>
             <input type="file" id="uploadBtn" multiple><br><br>
                             <h2>Preset of Findings</h2>
             <fieldset class="radio-group">
+
+                <!-- Preset findings  -->
                 <legend>Preset</legend>
                 <label for="preset-yes">
                     <input type="radio" id="preset-yes" name="preset" value="Yes"> Yes
@@ -105,15 +92,30 @@
             <div id="currentPresetDisplay" style="margin-bottom: 5px; font-size: 0.9em; color: #555;">
                 Preset: <span id="currentPresetValues">None</span>
             </div>
+
+
                     
             <!-- Finding -->
             <label for="finding">Finding</label>
             <select id="finding" name="finding" multiple size="5">
                 <!-- Findings will be dynamically added here -->
             </select>
-
             <button id="confirmFindingsBtn">OK</button>
-            <div id="uploadContainer"></div>
+            <!-- Compliance -->
+                <div class="radio-group">
+                    <legend>Compliance</legend>
+                    <label for="compliance-yes">
+                        <input type="radio" id="compliance-yes" name="compliance" value="Yes"> Yes
+                    </label>
+                    <label for="compliance-no">
+                        <input type="radio" id="compliance-no" name="compliance" value="No"> No
+                    </label>
+                </div>
+             
+             <div id="uploadContainer"></div>
+
+           
+            
 
             
         

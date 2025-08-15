@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    
     const typeEquipment = document.getElementById("type-equipment");
     const findingSelect = document.getElementById("finding");
     const saveButton = document.getElementById("save-data");
@@ -6,14 +7,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const locationSelect = document.getElementById("location");
     const addLocationButton = document.getElementById("add-location");
     const clearAllDataButton = document.getElementById("clear-all-data");
-    const locations = []; // Array to store unique locations
-    let formData = []; // Array to store form data
-    let isEx = false; // Global variable to track if the location is Ex
+   
     const confirmFindingsBtn = document.getElementById("confirmFindingsBtn");
     const uploadContainer = document.getElementById("uploadContainer");
     const botaoCarregar = document.getElementById('carregarBtn');
-    
-    let inspectionCount = 0;
+    const tagInput = document.getElementById('tag-id');
+    const description = document.getElementById('Equipment-des');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    const presetBtn = document.getElementById("preset-manage-btn");
+    const presetContainer = document.getElementById("preset-container");
+    const presetList = document.getElementById("preset-list");
+    const presetSaveBtn = document.getElementById("preset-save-btn");
+    const presetYes = document.getElementById("preset-yes");
+    const presetNo = document.getElementById("preset-no");
+    const presetSelect = document.getElementById("preset-list");
+    const displayPreset= document.getElementById("currentPresetValues");
+
+    const locations = []; // Array to store unique locations
+    let formData = []; // Array to store form data
+    let isEx = false; // Global variable to track if the location is Ex
+    let currentPreset = [];
+   // let inspectionCount = 0;
     let listaEquipamentos = [];
     //const inspectionCounterDisplay = document.getElementById("inspection-counter");
 
@@ -24,315 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
     updateInspectionCount();
     carregarListaDoLocalStorage()
     updatePresetDisplay();
+    refreshPresetDisplay();
 
-const tagInput = document.getElementById('tag-id');
-const description = document.getElementById('Equipment-des');
-const autocompleteList = document.getElementById('autocomplete-list');
-const presetBtn = document.getElementById("preset-manage-btn");
-const presetContainer = document.getElementById("preset-container");
-const presetList = document.getElementById("preset-list");
-const presetSaveBtn = document.getElementById("preset-save-btn");
-const presetYes = document.getElementById("preset-yes");
-const presetNo = document.getElementById("preset-no");
-const presetSelect = document.getElementById("preset-list");
-const displayPreset= document.getElementById("currentPresetValues");
-let currentPreset = [];
-
-// Location update
-locationSelect.addEventListener("change", () => {
-  localStorage.setItem("lastSelectedLocation", locationSelect.value);
-});
-
-
-// start hidden
-presetContainer.style.display = "none";
-// Listen to both Yes and No
-presetNo.addEventListener("change", refreshPresetDisplay);
-presetYes.addEventListener("change", refreshPresetDisplay);
-
-// Run on page load
-refreshPresetDisplay();
-
-// Only open if "Yes"
-presetBtn.addEventListener("click", () => {
-    if (!presetYes.checked) {
-        alert('Switch "Preset" to Yes to manage presets.');
-        return;
-    }
-    // show + refresh list (or toggle if you prefer)
-    updatePresetList(); // make sure this fills <select id="preset-list">
-    presetContainer.style.display = "block";
-});
-
-function refreshPresetDisplay() {
-    if (presetNo.checked) {
-        presetContainer.style.display = "none";
-        displayPreset.textContent = "None";
-        return;
-    }
-
-    // Get preset for current equipment type (fallback to "Others")
-    const eqType = (typeEquipment?.value || "Others").trim();
-    // If you saved to localStorage:
-    const list = loadPresetFromLS(eqType); // returns [] if none
-    // Or, if you keep it in memory: const list = currentPreset;
-
-    displayPreset.textContent = list.length ? list.join(", ") : "None";
-}
-
-
-
-
-// Save from <select multiple>
-presetSaveBtn.addEventListener("click", () => {
-  // read selected options
-  currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
-
-  // save per equipment type
-  const eqType = "Others";
-  savePresetToLS(eqType, currentPreset);
-
-  alert("Preset saved: " + currentPreset.join(", "));
-  presetContainer.style.display = "none";
-});
-
-
-// --- Load last choice ---
-const savedPresetChoice = localStorage.getItem("presetChoice");
-if (savedPresetChoice === "Yes") {
-    presetYes.checked = true;
-} else if (savedPresetChoice === "No") {
-    presetNo.checked = true;
-}
-
-// --- Save choice when changed ---
-[presetYes, presetNo].forEach(radio => {
-    radio.addEventListener("change", () => {
-        if (radio.checked) {
-            localStorage.setItem("presetChoice", radio.value);
-        }
-    });
-});
-
-
-
-// ---- LocalStorage helpers ----
-function savePresetToLS(type, list) {
-  try {
-    localStorage.setItem(`preset:${type}`, JSON.stringify(list || []));
-  } catch (e) {
-    console.error("Failed to save preset:", e);
-  }
-}
-
-function loadPresetFromLS(type) {
-  try {
-    const raw = localStorage.getItem(`preset:${type}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.error("Failed to load preset:", e);
-    return [];
-  }
-}
-
-function updatePresetList() {
-    const findings = findingsData["Others"] || [];
-    const presetSelect = document.getElementById("preset-list"); // <select id="preset-list" multiple>
-    presetSelect.innerHTML = "";
-
-    findings.forEach(finding => {
-        const option = document.createElement("option");
-        option.value = finding;
-        option.textContent = finding;
-        option.selected = currentPreset.includes(finding);
-        presetSelect.appendChild(option);
-    });
-}
-
-
-function updatePresetDisplay() {
-    const eqType = (typeEquipment?.value || "Others").trim();
-    const presetList = loadPresetFromLS(eqType); // or use currentPreset
-    const display = document.getElementById("currentPresetValues");
-
-    if (presetList.length > 0) {
-        display.textContent = presetList.join(", ");
-    } else {
-        display.textContent = "None";
-    }
-}
-
-// Call it after saving a preset
-presetSaveBtn.addEventListener("click", () => {
-    currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
-    const eqType = (typeEquipment?.value || "Others").trim();
-    savePresetToLS(eqType, currentPreset);
-
-    updatePresetDisplay(); // refresh UI
-
-    alert("Preset saved: " + currentPreset.join(", "));
-    presetContainer.style.display = "none";
-});
-
-tagInput.addEventListener('input', function() {
-    const inputValue = this.value.toUpperCase();
-    closeAllLists();
-
-    if (!inputValue) return;
-
-    const matchedEquipamentos = listaEquipamentos.filter(equipamento =>
-        equipamento.tag.toUpperCase().includes(inputValue)
-    );
-
-    if (matchedEquipamentos.length === 0) {
-        const noMatchItem = document.createElement('div');
-        noMatchItem.textContent = `TAG ${inputValue} não encontrada na lista.`;
-        autocompleteList.appendChild(noMatchItem);
-        return;
-    }
-
-    matchedEquipamentos.forEach(equipamento => {
-        const item = document.createElement('div');
-        item.innerHTML = `<strong>${equipamento.tag.substr(0, inputValue.length)}</strong>` +
-                         equipamento.tag.substr(inputValue.length) +
-                         ` - ${equipamento.descricao}`;
-        
-        item.addEventListener('click', function() {
-            tagInput.value = equipamento.tag;
-            description.value = equipamento.descricao;
-            closeAllLists();
-        });
-
-        autocompleteList.appendChild(item);
-    });
-});
-
-document.addEventListener('click', function(e) {
-    if (e.target !== tagInput) {
-        closeAllLists();
-    }
-});
-
-function closeAllLists() {
-    autocompleteList.innerHTML = '';
-}
-
-
-// --- 1. FUNÇÃO PARA CARREGAR A LISTA DO LOCALSTORAGE ---
-// Esta função é chamada ao carregar a página
-function carregarListaDoLocalStorage() {
-    const equipamentosSalvos = localStorage.getItem('listaEquipamentos');
-    if (equipamentosSalvos) {
-        listaEquipamentos = JSON.parse(equipamentosSalvos);
-        console.log('Lista de equipamentos carregada do localStorage.');
-    }
-}
-
-// BOTÃO
-botaoCarregar.addEventListener('click', carregarArquivoCSV);
-
-function carregarArquivoCSV() {
-  const fileInput = document.getElementById('csvFile');
-  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-  if (!file) {
-    alert('Por favor, selecione um arquivo CSV para carregar.');
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = function(e) {
-    try {
-      // 1) Texto cru + remove BOM
-      const raw = (e.target.result || '').replace(/^\uFEFF/, '');
-
-      // 2) Quebra de linhas robusta e ignora linhas vazias
-      const linhas = raw.split(/\r?\n/).filter(l => l.trim() !== '');
-      if (linhas.length < 2) {
-        alert('Arquivo CSV vazio ou com poucas linhas.');
-        return;
-      }
-
-      // 3) Detecta delimitador (vírgula ou ponto-e-vírgula)
-      const guessDelimiter = (s) => {
-        const c = (pat) => (s.match(pat) || []).length;
-        return c(/;/g) > c(/,/g) ? ';' : ',';
-      };
-      const delimiter = guessDelimiter(linhas[0]);
-
-      // 4) Normaliza cabeçalhos (minúsculas, sem acentos, trim)
-      const normalizeField = (s) => s
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
-        .toLowerCase()
-        .trim();
-
-      const cabecalhoOriginal = linhas[0].split(delimiter).map(h => h.trim());
-      const cabecalho = cabecalhoOriginal.map(normalizeField);
-
-      // 5) Verifica colunas esperadas ("tag" e "descricao")
-      if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
-        alert(
-          'O CSV deve conter as colunas "tag" e "descricao" no cabeçalho.\n' +
-          'Detectei: ' + cabecalhoOriginal.join(' | ')
-        );
-        return;
-      }
-
-      // 6) Constrói objetos por linha
-      const idxTag = cabecalho.indexOf('tag');
-      const idxDesc = cabecalho.indexOf('descricao');
-
-      const novaLista = [];
-      for (let i = 1; i < linhas.length; i++) {
-        const linha = linhas[i];
-        // divide por delimitador (simples; se precisar lidar com campos entre aspas, dá pra melhorar)
-        const dados = linha.split(delimiter).map(d => d.trim());
-        if (dados.length !== cabecalho.length) {
-          // pula linhas quebradas/incompletas
-          continue;
-        }
-
-        const item = {};
-        for (let j = 0; j < cabecalho.length; j++) {
-          item[cabecalho[j]] = dados[j];
-        }
-
-        // garante chaves legíveis também em pt
-        item.tag = item.tag ?? dados[idxTag] ?? '';
-        item.descricao = item.descricao ?? dados[idxDesc] ?? '';
-
-        // ignora linhas totalmente vazias
-        if ((item.tag || item.descricao)) {
-          novaLista.push(item);
-        }
-      }
-
-      // 7) Salva
-      listaEquipamentos = novaLista;
-      localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
-
-      alert(`Lista de equipamentos carregada com sucesso! Itens: ${listaEquipamentos.length}`);
-      console.log('Nova lista de equipamentos salva no localStorage.', listaEquipamentos);
-    } catch (err) {
-      console.error('Erro ao processar CSV:', err);
-      alert('Houve um erro ao processar o CSV. Veja o console para detalhes.');
-    }
-  };
-
-  // UTF-8 funciona melhor em mobile
-  reader.readAsText(file, 'UTF-8');
-}
-
-
-
-function updateInspectionCount() {
-        const inspectionCounterDisplay = document.getElementById("inspection-counter");
-        inspectionCounterDisplay.textContent = formData.length;
-    }
-
-
-    // Findings Data
+        // Findings Data
     const baseFindings = ["ID TAG", "Cable Tag", "Grounding", "Warning Sign", "External Condition","Accessible","Others"];
     const findingsData = {
         "Junction Box": [...baseFindings],
@@ -343,6 +51,300 @@ function updateInspectionCount() {
         "Environment Conditions": ["Isolation Mats","House Keeping","Electrical Room used for Storage", "Doors Entry Sign", "Cable Trays Covered", "Hazardous Area Signal"],
         "Others": [...baseFindings, "ON/OFF Stickers", "Live Parts Protected", "Indication Light Colour", "Direction of Rotation Arrow"]
     };
+
+    // Location update
+    locationSelect.addEventListener("change", () => {
+    localStorage.setItem("lastSelectedLocation", locationSelect.value);
+    });
+
+
+    // start hidden Preset Container
+    presetContainer.style.display = "none";
+    // Listen to both Yes and No
+    presetNo.addEventListener("change", refreshPresetDisplay);
+    presetYes.addEventListener("change", refreshPresetDisplay);
+
+
+
+    // Only open if "Yes"
+    presetBtn.addEventListener("click", () => {
+        if (!presetYes.checked) {
+            alert('Switch "Preset" to Yes to manage presets.');
+            return;
+        }
+        // show + refresh list (or toggle if you prefer)
+        updatePresetList(); // make sure this fills <select id="preset-list">
+        presetContainer.style.display = "block";
+    });
+
+    function refreshPresetDisplay() {
+        if (presetNo.checked) {
+            presetContainer.style.display = "none";
+            displayPreset.textContent = "None";
+            return;
+        } else {
+            // Get preset for current equipment type (fallback to "Others")
+            const eqType = ("Others").trim();
+
+            // If you saved to localStorage:
+            const list = loadPresetFromLS(eqType); // returns [] if none
+            // Or, if you keep it in memory: const list = currentPreset;
+
+            displayPreset.textContent = list.length ? list.join(", ") : "None";
+        }
+    }
+
+
+
+
+
+        // Save from <select multiple>
+        presetSaveBtn.addEventListener("click", () => {
+        // read selected options
+        currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
+
+        // save per equipment type
+        const eqType = "Others";
+        savePresetToLS(eqType, currentPreset);
+
+        alert("Preset saved: " + currentPreset.join(", "));
+        presetContainer.style.display = "none";
+        });
+
+        // --- Load last choice ---
+        const savedPresetChoice = localStorage.getItem("presetChoice");
+        if (savedPresetChoice === "Yes") {
+            presetYes.checked = true;
+        } else if (savedPresetChoice === "No") {
+            presetNo.checked = true;
+        }
+
+        // --- Save choice when changed ---
+        [presetYes, presetNo].forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.checked) {
+                    localStorage.setItem("presetChoice", radio.value);
+                }
+            });
+        });
+
+
+
+        // ---- LocalStorage helpers ----
+        function savePresetToLS(type, list) {
+        try {
+            localStorage.setItem(`preset:${type}`, JSON.stringify(list || []));
+        } catch (e) {
+            console.error("Failed to save preset:", e);
+        }
+        }
+
+        function loadPresetFromLS(type) {
+        try {
+            const raw = localStorage.getItem(`preset:${type}`);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            console.error("Failed to load preset:", e);
+            return [];
+        }
+        }
+
+        function updatePresetList() {
+            const findings = findingsData["Others"] || [];
+            const presetSelect = document.getElementById("preset-list"); // <select id="preset-list" multiple>
+            presetSelect.innerHTML = "";
+
+            findings.forEach(finding => {
+                const option = document.createElement("option");
+                option.value = finding;
+                option.textContent = finding;
+                option.selected = currentPreset.includes(finding);
+                presetSelect.appendChild(option);
+            });
+        }
+
+
+        function updatePresetDisplay() {
+            const eqType = ("Others").trim();
+            const presetList = loadPresetFromLS(eqType); // or use currentPreset
+            const display = document.getElementById("currentPresetValues");
+
+            if (presetList.length > 0) {
+                display.textContent = presetList.join(", ");
+            } else {
+                display.textContent = "None";
+            }
+        }
+
+        // Call it after saving a preset
+        presetSaveBtn.addEventListener("click", () => {
+            currentPreset = Array.from(presetSelect.selectedOptions).map(opt => opt.value);
+            const eqType = ("Others").trim();
+            savePresetToLS(eqType, currentPreset);
+
+            updatePresetDisplay(); // refresh UI
+
+            alert("Preset saved: " + currentPreset.join(", "));
+            presetContainer.style.display = "none";
+        });
+
+        tagInput.addEventListener('input', function() {
+            const inputValue = this.value.toUpperCase();
+            closeAllLists();
+            if (!inputValue) return;
+
+            const matchedEquipamentos = listaEquipamentos.filter(equipamento =>
+                equipamento.tag.toUpperCase().includes(inputValue)
+            );
+
+            if (matchedEquipamentos.length === 0) {
+                const noMatchItem = document.createElement('div');
+                noMatchItem.textContent = `TAG ${inputValue} não encontrada na lista.`;
+                autocompleteList.appendChild(noMatchItem);
+                return;
+            }
+
+            matchedEquipamentos.forEach(equipamento => {
+                const item = document.createElement('div');
+                item.innerHTML = `<strong>${equipamento.tag.substr(0, inputValue.length)}</strong>` +
+                                equipamento.tag.substr(inputValue.length) +
+                                ` - ${equipamento.descricao}`;
+                
+                item.addEventListener('click', function() {
+                    tagInput.value = equipamento.tag;
+                    description.value = equipamento.descricao;
+                    closeAllLists();
+                });
+
+                autocompleteList.appendChild(item);
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== tagInput) {
+                closeAllLists();
+            }
+        });
+
+        function closeAllLists() {
+            autocompleteList.innerHTML = '';
+        }
+
+
+        // --- 1. FUNÇÃO PARA CARREGAR A LISTA DO LOCALSTORAGE ---
+        // Esta função é chamada ao carregar a página
+        function carregarListaDoLocalStorage() {
+            const equipamentosSalvos = localStorage.getItem('listaEquipamentos');
+            if (equipamentosSalvos) {
+                listaEquipamentos = JSON.parse(equipamentosSalvos);
+                console.log('Lista de equipamentos carregada do localStorage.');
+            }
+        }
+
+        // BOTÃO
+        botaoCarregar.addEventListener('click', carregarArquivoCSV);
+
+        function carregarArquivoCSV() {
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+        if (!file) {
+            alert('Por favor, selecione um arquivo CSV para carregar.');
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+            // 1) Texto cru + remove BOM
+            const raw = (e.target.result || '').replace(/^\uFEFF/, '');
+
+            // 2) Quebra de linhas robusta e ignora linhas vazias
+            const linhas = raw.split(/\r?\n/).filter(l => l.trim() !== '');
+            if (linhas.length < 2) {
+                alert('Arquivo CSV vazio ou com poucas linhas.');
+                return;
+            }
+
+            // 3) Detecta delimitador (vírgula ou ponto-e-vírgula)
+            const guessDelimiter = (s) => {
+                const c = (pat) => (s.match(pat) || []).length;
+                return c(/;/g) > c(/,/g) ? ';' : ',';
+            };
+            const delimiter = guessDelimiter(linhas[0]);
+
+            // 4) Normaliza cabeçalhos (minúsculas, sem acentos, trim)
+            const normalizeField = (s) => s
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+                .toLowerCase()
+                .trim();
+
+            const cabecalhoOriginal = linhas[0].split(delimiter).map(h => h.trim());
+            const cabecalho = cabecalhoOriginal.map(normalizeField);
+
+            // 5) Verifica colunas esperadas ("tag" e "descricao")
+            if (!cabecalho.includes('tag') || !cabecalho.includes('descricao')) {
+                alert(
+                'O CSV deve conter as colunas "tag" e "descricao" no cabeçalho.\n' +
+                'Detectei: ' + cabecalhoOriginal.join(' | ')
+                );
+                return;
+            }
+
+            // 6) Constrói objetos por linha
+            const idxTag = cabecalho.indexOf('tag');
+            const idxDesc = cabecalho.indexOf('descricao');
+
+            const novaLista = [];
+            for (let i = 1; i < linhas.length; i++) {
+                const linha = linhas[i];
+                // divide por delimitador (simples; se precisar lidar com campos entre aspas, dá pra melhorar)
+                const dados = linha.split(delimiter).map(d => d.trim());
+                if (dados.length !== cabecalho.length) {
+                // pula linhas quebradas/incompletas
+                continue;
+                }
+
+                const item = {};
+                for (let j = 0; j < cabecalho.length; j++) {
+                item[cabecalho[j]] = dados[j];
+                }
+
+                // garante chaves legíveis também em pt
+                item.tag = item.tag ?? dados[idxTag] ?? '';
+                item.descricao = item.descricao ?? dados[idxDesc] ?? '';
+
+                // ignora linhas totalmente vazias
+                if ((item.tag || item.descricao)) {
+                novaLista.push(item);
+                }
+            }
+
+            // 7) Salva
+            listaEquipamentos = novaLista;
+            localStorage.setItem('listaEquipamentos', JSON.stringify(listaEquipamentos));
+
+            alert(`Lista de equipamentos carregada com sucesso! Itens: ${listaEquipamentos.length}`);
+            console.log('Nova lista de equipamentos salva no localStorage.', listaEquipamentos);
+            } catch (err) {
+            console.error('Erro ao processar CSV:', err);
+            alert('Houve um erro ao processar o CSV. Veja o console para detalhes.');
+            }
+        };
+
+        // UTF-8 funciona melhor em mobile
+        reader.readAsText(file, 'UTF-8');
+        }
+
+
+
+function updateInspectionCount() {
+        const inspectionCounterDisplay = document.getElementById("inspection-counter");
+        inspectionCounterDisplay.textContent = formData.length;
+    }
+
+
 
     // Update location dropdown
     function updateLocationDropdown() {
